@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-// import Vapi from '@vapi-ai/web'; // Commented out: using widget instead
 import './main.css';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import SendIcon from '@mui/icons-material/Send';
 import MicIcon from '@mui/icons-material/Mic';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
+import Vapi from '@vapi-ai/web';
 
-// const vapi = new Vapi({
-//   publicKey: process.env.REACT_APP_VAPI_PUBLIC_KEY,
-// });
+// --- Vapi Initialization ---
+// Initialize Vapi outside of the component to prevent re-initialization on re-renders.
+// Ensure your Vapi Public Key is set in your .env.local file as REACT_APP_VAPI_PUBLIC_KEY
+const vapi = new Vapi(process.env.REACT_APP_VAPI_PUBLIC_KEY || '');
 
 const App = () => {
   const [messages, setMessages] = useState([]);
@@ -18,90 +19,90 @@ const App = () => {
   const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
   const [partialTranscript, setPartialTranscript] = useState('');
   const messagesEndRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const callRef = useRef(null);
 
-  // Scroll to bottom whenever messages update
+  // --- Vapi Event Listeners Effect ---
+  useEffect(() => {
+    // Function to handle assistant messages
+    const onMessage = (message) => {
+      if (message.type === 'assistant-message') {
+        const aiMessage = { sender: 'ai', text: message.message.content };
+        setMessages((prev) => [...prev, aiMessage]);
+      }
+    };
+
+    // Function to handle user transcripts
+    const onTranscript = (transcript) => {
+       if (transcript.type === 'transcript') {
+         if (transcript.transcriptType === 'partial') {
+           setPartialTranscript(transcript.transcript);
+         } else if (transcript.transcriptType === 'final') {
+           const userMessage = { sender: 'user', text: transcript.transcript };
+           setMessages((prev) => [...prev, userMessage]);
+           setPartialTranscript(''); // Clear partial transcript after final
+         }
+       }
+    };
+
+    const onCallStart = () => {
+      console.log('Call has started.');
+      setIsVoiceChatActive(true);
+    };
+
+    const onCallEnd = () => {
+      console.log('Call has ended.');
+      setIsVoiceChatActive(false);
+      setPartialTranscript(''); // Clean up partial transcript on call end
+    };
+
+    const onError = (error) => {
+      console.error('Vapi error:', error);
+      setIsVoiceChatActive(false);
+      setMessages((prev) => [...prev, {
+        sender: 'ai',
+        text: 'Voice chat encountered an error. Please try again.'
+      }]);
+    };
+
+    // Register event listeners
+    vapi.on('call-start', onCallStart);
+    vapi.on('call-end', onCallEnd);
+    vapi.on('message', onMessage);
+    vapi.on('transcript', onTranscript);
+    vapi.on('error', onError);
+
+    // Cleanup function to remove listeners and stop any active call
+    return () => {
+      vapi.off('call-start', onCallStart);
+      vapi.off('call-end', onCallEnd);
+      vapi.off('message', onMessage);
+      vapi.off('transcript', onTranscript);
+      vapi.off('error', onError);
+      // Stop the call if the component unmounts
+      if (isVoiceChatActive) {
+          vapi.stop();
+      }
+    };
+    // Dependency array includes isVoiceChatActive to ensure cleanup is correct
+  }, [isVoiceChatActive]);
+
+
+  // Scroll to bottom whenever messages or partial transcripts update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, partialTranscript]);
 
-  // console.log("VAPI_PUBLIC_KEY:", process.env.REACT_APP_VAPI_PUBLIC_KEY);
-  // console.log("VAPI_ASSISTANT_ID:", process.env.REACT_APP_VAPI_ASSISTANT_ID);
+  // --- Text-based Chat Function (Kept as is) ---
+  const sendTextMessage = async () => {
+    if (!inputMessage.trim()) return;
 
-  // Start/stop Vapi voice on icon click
-  // const toggleVoiceChat = useCallback(async () => {
-  //   if (isVoiceChatActive) {
-  //     if (callRef.current) {
-  //       callRef.current.hangup();
-  //       callRef.current = null;
-  //     }
-  //     setIsVoiceChatActive(false);
-  //     setPartialTranscript('');
-  //     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  //   } else {
-  //     setIsVoiceChatActive(true);
-  //     const call = await vapi.start({
-  //       assistant: process.env.REACT_APP_VAPI_ASSISTANT_ID,
-  //       voice: true,
-  //       text: false,
-  //     });
-
-  //     if (!call) {
-  //       setIsVoiceChatActive(false);
-  //       setPartialTranscript('');
-  //       alert("Could not start voice call. Please check your Vapi keys and assistant ID.");
-  //       return;
-  //     }
-
-  //     callRef.current = call;
-
-  //     call.on('transcript', (event) => {
-  //       const { transcript, isFinal } = event.detail || event;
-  //       if (!transcript) return;
-
-  //       if (isFinal) {
-  //         setMessages(prev => [
-  //           ...prev,
-  //           { sender: 'user', text: transcript }
-  //         ]);
-  //         setPartialTranscript('');
-  //         if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  //         sendMessage(transcript);
-  //       } else {
-  //         setPartialTranscript(transcript);
-  //         if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  //         timeoutRef.current = setTimeout(() => {
-  //           setMessages(prev => [
-  //             ...prev,
-  //             { sender: 'user', text: transcript }
-  //           ]);
-  //           setPartialTranscript('');
-  //           sendMessage(transcript);
-  //         }, 3000);
-  //       }
-  //     });
-
-  //     call.on('end', () => {
-  //       setIsVoiceChatActive(false);
-  //       setPartialTranscript('');
-  //       callRef.current = null;
-  //       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  //     });
-  //   }
-  // }, [isVoiceChatActive]);
-
-  // Function to send a message to the AI backend
-  const sendMessage = async (text) => {
-    const messageText = typeof text === 'string' ? text : inputMessage;
-    if (!messageText.trim()) return;
-
-    const userMessage = { sender: 'user', text: messageText };
+    const userMessage = { sender: 'user', text: inputMessage };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
-    if (!text) setInputMessage('');
+    setInputMessage('');
     setIsLoading(true);
 
     try {
+      // This fetch call is for a separate, text-based backend.
+      // It is independent of the Vapi voice functionality.
       const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,19 +125,53 @@ const App = () => {
     }
   };
 
-  // Function to handle Enter key press
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !isLoading) {
-      sendMessage();
+      sendTextMessage();
     }
   };
 
-  // useEffect(() => {
-  //   vapi.on('error', (err) => {
-  //     console.error('Vapi error:', err);
-  //     alert('Vapi error: ' + (err?.message || JSON.stringify(err)));
-  //   });
-  // }, []);
+  // --- Voice Chat Control Functions ---
+  const startVoiceChat = useCallback(async () => {
+    // Check for Assistant ID
+    const assistantId = process.env.REACT_APP_VAPI_ASSISTANT_ID;
+    if (!assistantId) {
+      console.error('REACT_APP_VAPI_ASSISTANT_ID is not set');
+      setMessages(prev => [...prev, {
+        sender: 'ai',
+        text: 'Voice assistant is not configured. Please contact support.'
+      }]);
+      return;
+    }
+
+    // Check for microphone permissions
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+      console.error('Microphone permission denied:', error);
+      setMessages(prev => [...prev, {
+        sender: 'ai',
+        text: 'Microphone access is required for voice chat. Please allow microphone permissions and try again.'
+      }]);
+      return;
+    }
+
+    console.log('Starting voice chat...');
+    vapi.start(assistantId);
+  }, []); // vapi is stable, so no dependencies needed
+
+  const stopVoiceChat = useCallback(() => {
+    console.log('Stopping voice chat...');
+    vapi.stop();
+  }, []); // vapi is stable
+
+  const toggleVoiceChat = useCallback(() => {
+    if (isVoiceChatActive) {
+      stopVoiceChat();
+    } else {
+      startVoiceChat();
+    }
+  }, [isVoiceChatActive, startVoiceChat, stopVoiceChat]);
 
   return (
     <>
@@ -145,28 +180,13 @@ const App = () => {
           {/* Header */}
           <div className="aven-header">
             <h1 className="aven-title">Aven Support Agent</h1>
-            {/* Voice Chat Icon (commented out, using widget instead) */}
-            {/*
-            <IconButton
-              onClick={toggleVoiceChat}
-              color={isVoiceChatActive ? "error" : "success"}
-              size="large"
-              sx={{
-                bgcolor: isVoiceChatActive ? 'error.main' : 'success.main',
-                color: 'white',
-                '&:hover': { bgcolor: isVoiceChatActive ? 'error.dark' : 'success.dark' }
-              }}
-            >
-              {isVoiceChatActive ? <StopCircleIcon /> : <MicIcon />}
-            </IconButton>
-            */}
           </div>
 
           {/* Chat Messages */}
           <div className="aven-messages">
             {messages.length === 0 && (
               <div className="aven-welcome">
-                Welcome to <span className="highlight">Aven Support</span>! How can I assist you today?
+                Welcome to <span className="highlight">Aven Support</span>! Click the mic to talk or type a message below.
               </div>
             )}
             {messages.map((msg, idx) => (
@@ -211,7 +231,7 @@ const App = () => {
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              disabled={isLoading}
+              disabled={isLoading || isVoiceChatActive}
               size="small"
               sx={{
                 backgroundColor: 'white',
@@ -223,39 +243,34 @@ const App = () => {
             />
             <IconButton
               color="primary"
-              onClick={sendMessage}
-              disabled={isLoading || inputMessage.trim() === ''}
-              sx={{ bgcolor: 'blue.600', color: 'white', '&:hover': { bgcolor: 'blue.700' } }}
+              onClick={toggleVoiceChat}
+              sx={{
+                bgcolor: isVoiceChatActive ? '#ef4444' : '#22c55e', // red-500, green-500
+                color: 'white',
+                '&:hover': {
+                  bgcolor: isVoiceChatActive ? '#dc2626' : '#16a34a' // red-600, green-600
+                },
+                mx: 1
+              }}
+            >
+              {isVoiceChatActive ? <StopCircleIcon /> : <MicIcon />}
+            </IconButton>
+            <IconButton
+              color="primary"
+              onClick={sendTextMessage}
+              disabled={isLoading || isVoiceChatActive || inputMessage.trim() === ''}
+              sx={{
+                bgcolor: '#3b82f6', // blue-500
+                color: 'white',
+                '&:hover': { bgcolor: '#2563eb' }, // blue-600
+                '&:disabled': { bgcolor: '#9ca3af' } // gray-400
+              }}
             >
               <SendIcon />
             </IconButton>
           </div>
         </div>
       </div>
-      {/* Vapi Widget */}
-      <vapi-widget
-        public-key={process.env.REACT_APP_VAPI_PUBLIC_KEY}
-        assistant-id={process.env.REACT_APP_VAPI_ASSISTANT_ID}
-        mode="voice"
-        theme="dark"
-        base-bg-color="#000000"
-        accent-color="#14B8A6"
-        cta-button-color="#000000"
-        cta-button-text-color="#ffffff"
-        border-radius="large"
-        size="full"
-        position="bottom-right"
-        title="TALK WITH AI"
-        start-button-text="Start"
-        end-button-text="End Call"
-        chat-first-message="Hey, How can I help you today?"
-        chat-placeholder="Type your message..."
-        voice-show-transcript="true"
-        consent-required="true"
-        consent-title="Terms and conditions"
-        consent-content='By clicking "Agree," and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as otherwise described in our Terms of Service.'
-        consent-storage-key="vapi_widget_consent"
-      ></vapi-widget>
     </>
   );
 };

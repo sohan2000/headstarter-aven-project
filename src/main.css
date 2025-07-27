@@ -143,3 +143,21 @@
   gap: 0.5rem;
   border-radius: 0 0 1.5rem 1.5rem;
 }
+
+/* Voice transcript styles */
+.aven-transcript {
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Blinking cursor animation */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.aven-blink-cursor {
+  animation: blink 1s infinite;
+  font-weight: bold;
+  margin-left: 2px;
+}
