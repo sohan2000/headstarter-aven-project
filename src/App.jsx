@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import Vapi from '@vapi-ai/web';
+// import Vapi from '@vapi-ai/web'; // Commented out: using widget instead
 import './main.css';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
@@ -7,9 +7,9 @@ import SendIcon from '@mui/icons-material/Send';
 import MicIcon from '@mui/icons-material/Mic';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 
-const vapi = new Vapi({
-  publicKey: process.env.REACT_APP_VAPI_PUBLIC_KEY,
-});
+// const vapi = new Vapi({
+//   publicKey: process.env.REACT_APP_VAPI_PUBLIC_KEY,
+// });
 
 const App = () => {
   const [messages, setMessages] = useState([]);
@@ -26,67 +26,70 @@ const App = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, partialTranscript]);
 
+  // console.log("VAPI_PUBLIC_KEY:", process.env.REACT_APP_VAPI_PUBLIC_KEY);
+  // console.log("VAPI_ASSISTANT_ID:", process.env.REACT_APP_VAPI_ASSISTANT_ID);
+
   // Start/stop Vapi voice on icon click
-  const toggleVoiceChat = useCallback(async () => {
-    if (isVoiceChatActive) {
-      if (callRef.current) {
-        callRef.current.hangup();
-        callRef.current = null;
-      }
-      setIsVoiceChatActive(false);
-      setPartialTranscript('');
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    } else {
-      setIsVoiceChatActive(true);
-      const call = await vapi.start({
-        assistant: process.env.REACT_APP_VAPI_ASSISTANT_ID,
-        voice: true,
-        text: false,
-      });
+  // const toggleVoiceChat = useCallback(async () => {
+  //   if (isVoiceChatActive) {
+  //     if (callRef.current) {
+  //       callRef.current.hangup();
+  //       callRef.current = null;
+  //     }
+  //     setIsVoiceChatActive(false);
+  //     setPartialTranscript('');
+  //     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  //   } else {
+  //     setIsVoiceChatActive(true);
+  //     const call = await vapi.start({
+  //       assistant: process.env.REACT_APP_VAPI_ASSISTANT_ID,
+  //       voice: true,
+  //       text: false,
+  //     });
 
-      if (!call) {
-        setIsVoiceChatActive(false);
-        setPartialTranscript('');
-        alert("Could not start voice call. Please check your Vapi keys and assistant ID.");
-        return;
-      }
+  //     if (!call) {
+  //       setIsVoiceChatActive(false);
+  //       setPartialTranscript('');
+  //       alert("Could not start voice call. Please check your Vapi keys and assistant ID.");
+  //       return;
+  //     }
 
-      callRef.current = call;
+  //     callRef.current = call;
 
-      call.on('transcript', (event) => {
-        const { transcript, isFinal } = event.detail || event;
-        if (!transcript) return;
+  //     call.on('transcript', (event) => {
+  //       const { transcript, isFinal } = event.detail || event;
+  //       if (!transcript) return;
 
-        if (isFinal) {
-          setMessages(prev => [
-            ...prev,
-            { sender: 'user', text: transcript }
-          ]);
-          setPartialTranscript('');
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          sendMessage(transcript);
-        } else {
-          setPartialTranscript(transcript);
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          timeoutRef.current = setTimeout(() => {
-            setMessages(prev => [
-              ...prev,
-              { sender: 'user', text: transcript }
-            ]);
-            setPartialTranscript('');
-            sendMessage(transcript);
-          }, 3000);
-        }
-      });
+  //       if (isFinal) {
+  //         setMessages(prev => [
+  //           ...prev,
+  //           { sender: 'user', text: transcript }
+  //         ]);
+  //         setPartialTranscript('');
+  //         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  //         sendMessage(transcript);
+  //       } else {
+  //         setPartialTranscript(transcript);
+  //         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  //         timeoutRef.current = setTimeout(() => {
+  //           setMessages(prev => [
+  //             ...prev,
+  //             { sender: 'user', text: transcript }
+  //           ]);
+  //           setPartialTranscript('');
+  //           sendMessage(transcript);
+  //         }, 3000);
+  //       }
+  //     });
 
-      call.on('end', () => {
-        setIsVoiceChatActive(false);
-        setPartialTranscript('');
-        callRef.current = null;
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      });
-    }
-  }, [isVoiceChatActive]);
+  //     call.on('end', () => {
+  //       setIsVoiceChatActive(false);
+  //       setPartialTranscript('');
+  //       callRef.current = null;
+  //       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  //     });
+  //   }
+  // }, [isVoiceChatActive]);
 
   // Function to send a message to the AI backend
   const sendMessage = async (text) => {
@@ -128,12 +131,12 @@ const App = () => {
     }
   };
 
-  useEffect(() => {
-    vapi.on('error', (err) => {
-      console.error('Vapi error:', err);
-      alert('Vapi error: ' + (err?.message || JSON.stringify(err)));
-    });
-  }, []);
+  // useEffect(() => {
+  //   vapi.on('error', (err) => {
+  //     console.error('Vapi error:', err);
+  //     alert('Vapi error: ' + (err?.message || JSON.stringify(err)));
+  //   });
+  // }, []);
 
   return (
     <>
@@ -142,7 +145,8 @@ const App = () => {
           {/* Header */}
           <div className="aven-header">
             <h1 className="aven-title">Aven Support Agent</h1>
-            {/* Voice Chat Icon */}
+            {/* Voice Chat Icon (commented out, using widget instead) */}
+            {/*
             <IconButton
               onClick={toggleVoiceChat}
               color={isVoiceChatActive ? "error" : "success"}
@@ -155,6 +159,7 @@ const App = () => {
             >
               {isVoiceChatActive ? <StopCircleIcon /> : <MicIcon />}
             </IconButton>
+            */}
           </div>
 
           {/* Chat Messages */}
@@ -227,6 +232,30 @@ const App = () => {
           </div>
         </div>
       </div>
+      {/* Vapi Widget */}
+      <vapi-widget
+        public-key={process.env.REACT_APP_VAPI_PUBLIC_KEY}
+        assistant-id={process.env.REACT_APP_VAPI_ASSISTANT_ID}
+        mode="voice"
+        theme="dark"
+        base-bg-color="#000000"
+        accent-color="#14B8A6"
+        cta-button-color="#000000"
+        cta-button-text-color="#ffffff"
+        border-radius="large"
+        size="full"
+        position="bottom-right"
+        title="TALK WITH AI"
+        start-button-text="Start"
+        end-button-text="End Call"
+        chat-first-message="Hey, How can I help you today?"
+        chat-placeholder="Type your message..."
+        voice-show-transcript="true"
+        consent-required="true"
+        consent-title="Terms and conditions"
+        consent-content='By clicking "Agree," and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as otherwise described in our Terms of Service.'
+        consent-storage-key="vapi_widget_consent"
+      ></vapi-widget>
     </>
   );
 };
