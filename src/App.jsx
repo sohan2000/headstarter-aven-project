@@ -7,40 +7,58 @@ import MicIcon from '@mui/icons-material/Mic';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import Vapi from '@vapi-ai/web';
 
-// --- Vapi Initialization ---
-// Initialize Vapi outside of the component to prevent re-initialization on re-renders.
-// Ensure your Vapi Public Key is set in your .env.local file as REACT_APP_VAPI_PUBLIC_KEY
-const vapi = new Vapi(process.env.REACT_APP_VAPI_PUBLIC_KEY || '');
-
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
   const [partialTranscript, setPartialTranscript] = useState('');
+  const [vapi, setVapi] = useState(null);
   const messagesEndRef = useRef(null);
+  const callRef = useRef(null);
 
-  // --- Vapi Event Listeners Effect ---
+  // Initialize Vapi and set up event listeners
   useEffect(() => {
-    // Function to handle assistant messages
-    const onMessage = (message) => {
-      if (message.type === 'assistant-message') {
-        const aiMessage = { sender: 'ai', text: message.message.content };
-        setMessages((prev) => [...prev, aiMessage]);
-      }
-    };
+    if (!process.env.REACT_APP_VAPI_PUBLIC_KEY) {
+      console.error('REACT_APP_VAPI_PUBLIC_KEY is not set');
+      return;
+    }
 
-    // Function to handle user transcripts
-    const onTranscript = (transcript) => {
-       if (transcript.type === 'transcript') {
-         if (transcript.transcriptType === 'partial') {
-           setPartialTranscript(transcript.transcript);
-         } else if (transcript.transcriptType === 'final') {
-           const userMessage = { sender: 'user', text: transcript.transcript };
-           setMessages((prev) => [...prev, userMessage]);
-           setPartialTranscript(''); // Clear partial transcript after final
-         }
-       }
+    const vapiInstance = new Vapi(process.env.REACT_APP_VAPI_PUBLIC_KEY);
+    setVapi(vapiInstance);
+
+    // Function to handle all Vapi messages
+    const onMessage = (message) => {
+      console.log('Vapi message received:', message);
+
+      if (message.type === 'transcript') {
+        if (message.transcriptType === 'partial') {
+          setPartialTranscript(message.transcript);
+        } else if (message.transcriptType === 'final') {
+          // Add user message to chat
+          if (message.transcript && message.transcript.trim()) {
+            const userMessage = { sender: 'user', text: message.transcript };
+            setMessages(prev => [...prev, userMessage]);
+          }
+          setPartialTranscript(''); // Clear partial transcript after final
+        }
+      } else if (message.type === 'assistant-message') {
+        // Handle assistant responses
+        const content = message.message?.content || message.content;
+        if (content) {
+          const aiMessage = { sender: 'ai', text: content };
+          setMessages(prev => [...prev, aiMessage]);
+        }
+      } else if (message.type === 'conversation-update') {
+        // Handle conversation updates (alternative message format)
+        if (message.conversation && message.conversation.length > 0) {
+          const lastMessage = message.conversation[message.conversation.length - 1];
+          if (lastMessage.role === 'assistant' && lastMessage.message) {
+            const aiMessage = { sender: 'ai', text: lastMessage.message };
+            setMessages(prev => [...prev, aiMessage]);
+          }
+        }
+      }
     };
 
     const onCallStart = () => {
@@ -57,6 +75,7 @@ const App = () => {
     const onError = (error) => {
       console.error('Vapi error:', error);
       setIsVoiceChatActive(false);
+      setPartialTranscript('');
       setMessages((prev) => [...prev, {
         sender: 'ai',
         text: 'Voice chat encountered an error. Please try again.'
@@ -64,26 +83,26 @@ const App = () => {
     };
 
     // Register event listeners
-    vapi.on('call-start', onCallStart);
-    vapi.on('call-end', onCallEnd);
-    vapi.on('message', onMessage);
-    vapi.on('transcript', onTranscript);
-    vapi.on('error', onError);
+    vapiInstance.on('call-start', onCallStart);
+    vapiInstance.on('call-end', onCallEnd);
+    vapiInstance.on('message', onMessage);
+    vapiInstance.on('error', onError);
 
     // Cleanup function to remove listeners and stop any active call
     return () => {
-      vapi.off('call-start', onCallStart);
-      vapi.off('call-end', onCallEnd);
-      vapi.off('message', onMessage);
-      vapi.off('transcript', onTranscript);
-      vapi.off('error', onError);
-      // Stop the call if the component unmounts
-      if (isVoiceChatActive) {
-          vapi.stop();
+      if (vapiInstance) {
+        vapiInstance.off('call-start', onCallStart);
+        vapiInstance.off('call-end', onCallEnd);
+        vapiInstance.off('message', onMessage);
+        vapiInstance.off('error', onError);
+        
+        // Stop the call if active
+        if (isVoiceChatActive) {
+          vapiInstance.stop();
+        }
       }
     };
-    // Dependency array includes isVoiceChatActive to ensure cleanup is correct
-  }, [isVoiceChatActive]);
+  }, []); // Empty dependency array - only run once
 
 
   // Scroll to bottom whenever messages or partial transcripts update
@@ -133,6 +152,11 @@ const App = () => {
 
   // --- Voice Chat Control Functions ---
   const startVoiceChat = useCallback(async () => {
+    if (!vapi) {
+      console.error('Vapi not initialized');
+      return;
+    }
+
     // Check for Assistant ID
     const assistantId = process.env.REACT_APP_VAPI_ASSISTANT_ID;
     if (!assistantId) {
@@ -156,14 +180,33 @@ const App = () => {
       return;
     }
 
-    console.log('Starting voice chat...');
-    vapi.start(assistantId);
-  }, []); // vapi is stable, so no dependencies needed
+    try {
+      console.log('Starting voice chat with assistant ID:', assistantId);
+      
+      // Use the assistant ID to start the call
+      const call = await vapi.start(assistantId);
+      
+      callRef.current = call;
+      console.log('Voice chat started successfully with assistant ID');
+    } catch (error) {
+      console.error('Error starting voice chat:', error);
+      setIsVoiceChatActive(false);
+      setMessages(prev => [...prev, {
+        sender: 'ai',
+        text: 'Sorry, there was an issue starting the voice chat. Please try again.'
+      }]);
+    }
+  }, [vapi]);
 
   const stopVoiceChat = useCallback(() => {
-    console.log('Stopping voice chat...');
-    vapi.stop();
-  }, []); // vapi is stable
+    if (vapi && isVoiceChatActive) {
+      console.log('Stopping voice chat...');
+      vapi.stop();
+      setIsVoiceChatActive(false);
+      setPartialTranscript('');
+      callRef.current = null;
+    }
+  }, [vapi, isVoiceChatActive]);
 
   const toggleVoiceChat = useCallback(() => {
     if (isVoiceChatActive) {
