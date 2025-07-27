@@ -1,0 +1,64 @@
+{
+  "name": "aven-support-agent",
+  "version": "1.0.0",
+  "description": "Aven AI Customer Support Agent built with React",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [
+    "react",
+    "customer-support",
+    "ai",
+    "chatbot"
+  ],
+  "author": "Sohan Vallapureddy",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "@pinecone-database/pinecone": "^6.1.2",
+    "@vapi-ai/web": "^2.3.8",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "^5.0.1",
+    "tailwindcss": "^2.2.19"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.2",
+    "postcss": "^8.4.5"
+  },
+  "homepage": "http://sohanv.com",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/sohan2000/aven-support-agent.git"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/sohan2000/aven-support-agent/issues"
+  },
+  "proxy": "http://localhost:5000"
+}
