@@ -1,56 +1,26 @@
 # Aven Support Agent
 
 ## Overview
-The Aven Support Agent is a React-based customer support application designed to assist users with their inquiries. It features a chat interface where users can interact with an AI-powered support agent, which provides responses based on user input.
 
-## Project Structure
-```
-aven-support-agent
-├── public
-│   └── index.html          # Main HTML file serving as the entry point for the React application
-├── src
-│   ├── App.jsx             # Main App component managing chat functionality
-│   ├── index.js            # Entry point for the React application
-│   └── styles
-│       └── tailwind.css    # Tailwind CSS styles for the project
-├── package.json            # Configuration file for npm
-├── tailwind.config.js      # Configuration file for Tailwind CSS
-├── postcss.config.js       # Configuration file for PostCSS
-└── README.md               # Documentation for the project
-```
+The Aven Support Agent is a React-based customer support application that allows users to interact with an AI-powered support agent via chat and voice.
 
-## Setup Instructions
+## How to Run
 
-1. **Clone the Repository**
-   ```bash
-   git clone <repository-url>
-   cd aven-support-agent
-   ```
+1. **Install dependencies:**
+   ```npm install```
 
-2. **Install Dependencies**
-   Make sure you have Node.js and npm installed. Then run:
-   ```bash
-   npm install
-   ```
+2. **Set up environment variables:**
 
-3. **Run the Application**
-   Start the development server:
-   ```bash
-   npm start
-   ```
-   The application will be available at `http://localhost:3000`.
+- Create a `.env` file.
+- Add your Vapi public key and assistant ID, and any other required keys.
+
+3. **Start the development server:**
+   ```npm start```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ## Usage
-- Open the application in your web browser.
-- Type your questions in the input field and press Enter or click the Send button to interact with the AI support agent.
-- You can also toggle voice chat functionality (conceptual, requires integration).
 
-## Customization
-- Modify the styles in `src/styles/tailwind.css` to customize the appearance of the application.
-- Update the AI responses in `src/App.jsx` to tailor the support agent's replies to your needs.
-
-## Contributing
-Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bug fixes.
-
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+- Type your question in the chat box and press Enter or click the send button to interact with the AI agent.
+- Click the microphone icon to start a voice conversation with the AI agent. Speak your query, and the AI will respond in real time.
+- The chat window will display both your messages and the AI's responses.
