@@ -73,14 +73,14 @@
 }
 
 .aven-message.user {
-  background: #2563eb;
+  background: #3b82f6;
   color: #fff;
   border-bottom-right-radius: 0;
 }
 
 .aven-message.ai {
-  background: #e5e7eb;
-  color: #1e293b;
+  background: #22c55e;
+  color: #fff;
   border-bottom-left-radius: 0;
 }
 
