@@ -30,4 +30,6 @@ This project delivers an advanced conversational and voice AI assistant that com
 - Voice-activated helpdesk agents.
 - Private or business data search and summarization tools.
 
-Confidently built with the latest in AI, search, and web technologies. Clone, customize, and take your conversational AI to the next level!
+## 🏗️ Architecture Diagram
+
+![Headstarter-Aven Architecture Diagram](https://github.com/sohan2000/headstarter-aven-project/blob/master/Headstarter-Aven-Architecture-Diagram.png)
