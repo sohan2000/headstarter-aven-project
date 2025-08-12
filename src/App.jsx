@@ -224,99 +224,137 @@ const App = () => {
   }, [isVoiceChatActive, startVoiceChat, stopVoiceChat]);
 
   return (
-    <>
-      <div className="aven-bg">
-        <div className="aven-container">
-          <div className="aven-header">
-            <h1 className="aven-title">Aven Support Agent</h1>
-          </div>
-          <div className="aven-messages">
-            {messages.length === 0 && (
-              <div className="aven-welcome">
-                Welcome to <span className="highlight">Aven Support</span>! Click the mic to talk or type a message below.
+    <div className="aven-bg">
+      <div className="aven-container">
+        <div className="aven-navbar">
+          <a href="https://www.aven.com" className="aven-logo-link">
+            <svg className="aven-logo" viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <text x="10" y="25" fontSize="18" fontWeight="700" fill="#000000">Aven</text>
+            </svg>
+          </a>
+        </div>
+        
+        <div className="aven-header">
+          <h1 className="aven-title">How can we help?</h1>
+          <p className="aven-subtitle">Get instant support for your Aven Card</p>
+        </div>
+    
+        <div className="aven-messages">
+          {messages.length === 0 && (
+            <div className="aven-welcome">
+              <h2>Welcome to Aven Support</h2>
+              <p>
+                Ask questions about your <span className="highlight">Aven Card</span>, 
+                rates, payments, applications, and more. You can also use voice chat for hands-free assistance.
+              </p>
+            </div>
+          )}
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`aven-message-row ${msg.sender === 'user' ? 'user' : 'ai'}`}
+            >
+              <div className={`aven-message ${msg.sender}`}>
+                {msg.text}
+                {msg === lastAiMessageRef.current && <span className="aven-blink-cursor">|</span>}
               </div>
-            )}
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`aven-message-row ${msg.sender === 'user' ? 'user' : 'ai'}`}
-              >
-                <div className={`aven-message ${msg.sender}`}>
-                  {msg.text}
-                  {msg === lastAiMessageRef.current && <span className="aven-blink-cursor">|</span>}
+            </div>
+          ))}
+          {partialTranscript && (
+            <div className="aven-message-row user">
+              <div className="aven-message user aven-transcript">
+                {partialTranscript}
+                <span className="aven-blink-cursor">|</span>
+              </div>
+            </div>
+          )}
+          {isLoading && (
+            <div className="aven-loading-row">
+              <div className="aven-loading-message">
+                <div className="aven-bounce-dots">
+                  <span className="aven-bounce-dot"></span>
+                  <span className="aven-bounce-dot delay-200"></span>
+                  <span className="aven-bounce-dot delay-400"></span>
                 </div>
               </div>
-            ))}
-            {partialTranscript && (
-              <div className="aven-message-row user">
-                <div className="aven-message user aven-transcript">
-                  {partialTranscript}
-                  <span className="aven-blink-cursor">|</span>
-                </div>
-              </div>
-            )}
-            {isLoading && (
-              <div className="aven-loading-row">
-                <div className="aven-loading-message">
-                  <div className="aven-bounce-dots">
-                    <span className="aven-bounce-dot"></span>
-                    <span className="aven-bounce-dot delay-200"></span>
-                    <span className="aven-bounce-dot delay-400"></span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="aven-input-area">
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="aven-search-section">
+          <div className="aven-search-container">
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Type your question..."
+              placeholder="Search question, keywords, or topics"
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isLoading}
-              size="small"
+              size="medium"
               sx={{
-                backgroundColor: 'white',
-                borderRadius: '9999px',
+                backgroundColor: 'transparent',
+                borderRadius: 'var(--aven-radius)',
+                flex: 1,
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: '9999px',
+                  borderRadius: 'var(--aven-radius)',
+                  fontSize: '1rem',
+                  backgroundColor: 'transparent',
+                  '& fieldset': {
+                    border: 'none',
+                  },
+                  '&:hover fieldset': {
+                    border: 'none',
+                  },
+                  '&.Mui-focused fieldset': {
+                    border: 'none',
+                  },
+                },
+                '& .MuiInputBase-input': {
+                  padding: '16px 20px',
+                  color: 'var(--aven-text-primary)',
+                  '&::placeholder': {
+                    color: 'var(--aven-text-muted)',
+                    opacity: 1,
+                  },
                 },
               }}
             />
-            <IconButton
-              color="primary"
+            <button
+              className={`aven-action-button ${isVoiceChatActive ? '' : 'primary'}`}
               onClick={toggleVoiceChat}
-              sx={{
-                bgcolor: isVoiceChatActive ? '#ef4444' : '#22c55e',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: isVoiceChatActive ? '#dc2626' : '#16a34a'
-                },
-                mx: 1
-              }}
             >
               {isVoiceChatActive ? <StopCircleIcon /> : <MicIcon />}
-            </IconButton>
+            </button>
             <IconButton
               color="primary"
               onClick={sendTextMessage}
               disabled={isLoading || inputMessage.trim() === ''}
               sx={{
-                bgcolor: '#3b82f6',
+                bgcolor: 'var(--aven-accent)',
                 color: 'white',
-                '&:hover': { bgcolor: '#2563eb' },
-                '&:disabled': { bgcolor: '#9ca3af' }
+                width: 52,
+                height: 52,
+                '&:hover': {
+                  bgcolor: 'var(--aven-accent-light)',
+                  transform: 'scale(1.05)',
+                },
+                '&:disabled': {
+                  bgcolor: 'var(--aven-text-muted)',
+                  transform: 'none',
+                },
+                borderRadius: 'var(--aven-radius)',
+                transition: 'all 0.2s ease',
+                boxShadow: 'var(--aven-shadow)',
               }}
             >
-              <SendIcon />
+              <SendIcon sx={{ fontSize: '1.25rem' }} />
             </IconButton>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
