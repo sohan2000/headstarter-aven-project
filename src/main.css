@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Layout */
 .aven-bg {
   min-height: 100vh;
   background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 100%);
@@ -144,13 +143,11 @@
   border-radius: 0 0 1.5rem 1.5rem;
 }
 
-/* Voice transcript styles */
 .aven-transcript {
   opacity: 0.8;
   font-style: italic;
 }
 
-/* Blinking cursor animation */
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
